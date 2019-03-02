@@ -167,18 +167,26 @@ public class VPNManager extends CordovaPlugin {
         vpnInfo.setUserCertificatePassword(userCertPassword);
 
         // Import the user certificate
-        UserCredentialManager.getInstance().storeCredentials(b64UserCert.getBytes(), userCertPassword.toCharArray());
+        // remove this for login/password based auth
+        // UserCredentialManager.getInstance().storeCredentials(b64UserCert.getBytes(), userCertPassword.toCharArray());
 
         // Decode the CA certificate from base64 to an X509Certificate
         byte[] decoded = android.util.Base64.decode(b64CaCert.getBytes(), 0);
         CertificateFactory factory = CertificateFactory.getInstance("X.509");
+
         InputStream in = new ByteArrayInputStream(decoded);
         X509Certificate certificate = (X509Certificate)factory.generateCertificate(in);
 
         // And then import it into the Strongswan LocalCertificateStore
-        KeyStore store = KeyStore.getInstance("LocalCertificateStore");
+        // Obsolete keystore will fail in android. 
+        //KeyStore store = KeyStore.getInstance("LocalCertificateStore");
+
+        KeyStore store = KeyStore.getInstance("BouncyCastle");
+        
         store.load(null, null);
-        store.setCertificateEntry(null, certificate);
+        // null keystores not allowed anymore? add an alias. 
+        
+        store.setCertificateEntry("EngageModeVPN", certificate);
         TrustedCertificateManager.getInstance().reset();
 
         return vpnInfo;
